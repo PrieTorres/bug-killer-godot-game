@@ -78,7 +78,7 @@ func _sync_hitbox_size() -> void:
     var half_visual := (texture_size * global_scale) * 0.5
 
     if collision_shape.shape is CircleShape2D:
-        var radius := max(half_visual.x, half_visual.y) * hitbox_scale
+        var radius: float = max(half_visual.x, half_visual.y) * hitbox_scale
         (collision_shape.shape as CircleShape2D).radius = radius
     elif collision_shape.shape is RectangleShape2D:
         var extents := half_visual * hitbox_scale
@@ -91,7 +91,7 @@ func _get_visual_half_size() -> Vector2:
     var collision_shape: CollisionShape2D = $CollisionShape2D
     if collision_shape and collision_shape.shape:
         if collision_shape.shape is CircleShape2D:
-            var radius := (collision_shape.shape as CircleShape2D).radius
+            var radius: float = (collision_shape.shape as CircleShape2D).radius
             return Vector2(radius, radius)
         elif collision_shape.shape is RectangleShape2D:
             return (collision_shape.shape as RectangleShape2D).extents
