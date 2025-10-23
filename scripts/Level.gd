@@ -25,149 +25,150 @@ var _running: bool = false
 var _time_left: float
 
 func _ready() -> void:
-	_rng.randomize()
-	_setup_viewport()
-	_setup_timers()
-	start_level()
+    _rng.randomize()
+    _setup_viewport()
+    _setup_timers()
+    start_level()
 
 func _setup_viewport() -> void:
-	if not _game_viewport:
-		return
+    if not _game_viewport:
+        return
 
-	_game_viewport.handle_input_locally = true
-	_game_viewport.physics_object_picking = true
-	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+    _game_viewport.handle_input_locally = true
+    _game_viewport.physics_object_picking = true
+    _game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 func _setup_timers() -> void:
-	_level_timer.one_shot = true
-	_spawn_timer.one_shot = false
+    _level_timer.one_shot = true
+    _spawn_timer.one_shot = false
 
 func _reset_ui() -> void:
-	_kills = 0
-	_time_left = duration
-	_update_ui()
-	_status_label_hide()
+    _kills = 0
+    _time_left = duration
+    _update_ui()
+    _status_label_hide()
 
 func _update_ui() -> void:
-	_time_label.text = "Tempo: %.1f" % _time_left
-	_score_label.text = "Kills: %d/%d" % [_kills, target_kills]
+    _time_label.text = "Tempo: %.1f" % _time_left
+    _score_label.text = "Kills: %d/%d" % [_kills, target_kills]
 
 func _process(_delta: float) -> void:
-	if _running:
-		_time_left = max(0.0, _level_timer.time_left)
-		_update_ui()
+    if _running:
+        _time_left = max(0.0, _level_timer.time_left)
+        _update_ui()
 
 func start_level() -> void:
-	_running = true
-	_reset_ui()
-	_level_timer.wait_time = duration
-	_level_timer.start()
-	_spawn_timer.wait_time = spawn_interval
-	get_tree().create_timer(initial_delay).timeout.connect(func() -> void:
-		if _running:
-			_spawn_timer.start()
-	)
+    _running = true
+    _reset_ui()
+    _level_timer.wait_time = duration
+    _level_timer.start()
+    _spawn_timer.wait_time = spawn_interval
+    get_tree().create_timer(initial_delay).timeout.connect(func() -> void:
+        if _running:
+            _spawn_timer.start()
+    )
 
 func stop_level() -> void:
-	_running = false
-	_level_timer.stop()
-	_spawn_timer.stop()
+    _running = false
+    _level_timer.stop()
+    _spawn_timer.stop()
 
 func _on_SpawnTimer_timeout() -> void:
-	if not _running:
-		return
-	if get_tree().get_nodes_in_group("bugs").size() >= max_concurrent_bugs:
-		return
+    if not _running:
+        return
+    if get_tree().get_nodes_in_group("bugs").size() >= max_concurrent_bugs:
+        return
 
-	var bug := _bug_scene.instantiate()
-	bug.add_to_group("bugs")
-	add_child(bug)
+    var bug := _bug_scene.instantiate()
+    bug.add_to_group("bugs")
+    add_child(bug)
 
-	var bounds := _get_play_bounds()
-	var start_pos: Vector2
-	var end_pos: Vector2
-	var edge := _rng.randi_range(0, 3 if allow_vertical_spawns else 1)
-	var outer := 32.0
+    var bounds := _get_play_bounds()
+    var start_pos: Vector2
+    var end_pos: Vector2
+    var edge := _rng.randi_range(0, 3 if allow_vertical_spawns else 1)
+    var outer := 32.0
 
-	match edge:
-		0:
-			start_pos = Vector2(bounds.position.x - outer, _rng.randf_range(bounds.position.y, bounds.end.y))
-			end_pos = Vector2(bounds.end.x + outer, start_pos.y + _rng.randf_range(-80, 80))
-		1:
-			start_pos = Vector2(bounds.end.x + outer, _rng.randf_range(bounds.position.y, bounds.end.y))
-			end_pos = Vector2(bounds.position.x - outer, start_pos.y + _rng.randf_range(-80, 80))
-		2:
-			start_pos = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), bounds.position.y - outer)
-			end_pos = Vector2(start_pos.x + _rng.randf_range(-80, 80), bounds.end.y + outer)
-		3:
-			start_pos = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), bounds.end.y + outer)
-			end_pos = Vector2(start_pos.x + _rng.randf_range(-80, 80), bounds.position.y - outer)
+    match edge:
+        0:
+            start_pos = Vector2(bounds.position.x - outer, _rng.randf_range(bounds.position.y, bounds.end.y))
+            end_pos = Vector2(bounds.end.x + outer, start_pos.y + _rng.randf_range(-80, 80))
+        1:
+            start_pos = Vector2(bounds.end.x + outer, _rng.randf_range(bounds.position.y, bounds.end.y))
+            end_pos = Vector2(bounds.position.x - outer, start_pos.y + _rng.randf_range(-80, 80))
+        2:
+            start_pos = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), bounds.position.y - outer)
+            end_pos = Vector2(start_pos.x + _rng.randf_range(-80, 80), bounds.end.y + outer)
+        3:
+            start_pos = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), bounds.end.y + outer)
+            end_pos = Vector2(start_pos.x + _rng.randf_range(-80, 80), bounds.position.y - outer)
 
-	bug.call("setup", start_pos, end_pos, bug_speed_range, bounds)
-	bug.killed.connect(_on_bug_killed)
+    bug.call("setup", start_pos, end_pos, bug_speed_range, bounds)
+    bug.killed.connect(_on_bug_killed)
 
 func _on_bug_killed() -> void:
-	_kills += 1
-	_update_ui()
-	if _kills >= target_kills:
-		_end_level(true)
+    _kills += 1
+    _update_ui()
+    if _kills >= target_kills:
+        _end_level(true)
 
 func _end_level(success: bool) -> void:
-	if not _running:
-		return
+    if not _running:
+        return
 
-	stop_level()
-	_status_label.visible = true
-	_status_label.text = "✅ Sucesso!" if success else "❌ Falha!"
-	emit_signal("level_finished", success)
+    stop_level()
+    _status_label.visible = true
+    _status_label.text = "✅ Sucesso!" if success else "❌ Falha!"
+    emit_signal("level_finished", success)
 
-	for bug in get_tree().get_nodes_in_group("bugs"):
-		if is_instance_valid(bug):
-			bug.queue_free()
+    for bug in get_tree().get_nodes_in_group("bugs"):
+        if is_instance_valid(bug):
+            bug.queue_free()
 
 func _get_play_bounds() -> Rect2:
-	if _game_viewport:
-		var viewport_size := Vector2(_game_viewport.size)
-		if _game_viewport.size_2d_override_enabled:
-			viewport_size = Vector2(_game_viewport.size_2d_override)
-		return Rect2(Vector2.ZERO, viewport_size)
+    if _game_viewport:
+        var viewport_size := Vector2(_game_viewport.size)
+        var override_size := _game_viewport.size_2d_override
+        if override_size != Vector2i.ZERO:
+            viewport_size = Vector2(override_size)
+        return Rect2(Vector2.ZERO, viewport_size)
 
-	return Rect2(Vector2.ZERO, get_viewport_rect().size)
+    return Rect2(Vector2.ZERO, get_viewport_rect().size)
 
 func _on_LevelTimer_timeout() -> void:
-	_end_level(_kills >= target_kills)
+    _end_level(_kills >= target_kills)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _running:
-		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_try_kill_bug_at_pointer()
+    if not _running:
+        return
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        _try_kill_bug_at_pointer()
 
 func _try_kill_bug_at_pointer() -> void:
-	var viewport := _game_viewport if _game_viewport else get_viewport()
-	if not viewport:
-		return
+    var viewport := _game_viewport if _game_viewport else get_viewport()
+    if not viewport:
+        return
 
-	var mouse_pos := viewport.get_mouse_position()
-	var canvas_transform := get_canvas_transform()
-	var world_pos := canvas_transform.affine_inverse().xform(mouse_pos)
+    var mouse_pos := viewport.get_mouse_position()
+    var canvas_transform := get_canvas_transform()
+    var world_pos := canvas_transform.affine_inverse().xform(mouse_pos)
 
-	var space_state := get_world_2d().direct_space_state
-	if not space_state:
-		return
+    var space_state := get_world_2d().direct_space_state
+    if not space_state:
+        return
 
-	var params := PhysicsPointQueryParameters2D.new()
-	params.collide_with_areas = true
-	params.collide_with_bodies = false
-	params.position = world_pos
+    var params := PhysicsPointQueryParameters2D.new()
+    params.collide_with_areas = true
+    params.collide_with_bodies = false
+    params.position = world_pos
 
-	var hits := space_state.intersect_point(params, 8)
-	for hit in hits:
-		var collider := hit.get("collider")
-		if collider and collider.is_in_group("bugs") and collider.has_method("kill"):
-			collider.kill()
-			return
+    var hits := space_state.intersect_point(params, 8)
+    for hit in hits:
+        var collider := hit.get("collider")
+        if collider and collider.is_in_group("bugs") and collider.has_method("kill"):
+            collider.kill()
+            return
 
 func _status_label_hide() -> void:
-	_status_label.text = ""
-	_status_label.visible = false
+    _status_label.text = ""
+    _status_label.visible = false
