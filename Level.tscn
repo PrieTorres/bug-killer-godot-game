@@ -16,7 +16,7 @@ offset_left = -128.51451
 offset_top = -96.962234
 offset_right = 128.7906
 offset_bottom = 49.34265
-mouse_filter = 0
+mouse_filter = 2
 stretch = true
 
 [node name="GameViewport" type="SubViewport" parent="Background/ScreenContainer"]
