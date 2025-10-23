@@ -151,7 +151,7 @@ func _try_kill_bug_at_pointer() -> void:
 
     var mouse_pos := viewport.get_mouse_position()
     var canvas_transform := get_canvas_transform()
-    var world_pos := canvas_transform.affine_inverse().xform(mouse_pos)
+    var world_pos := canvas_transform.affine_inverse() * mouse_pos
 
     var space_state := get_world_2d().direct_space_state
     if not space_state:
