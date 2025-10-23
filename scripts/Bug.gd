@@ -1,5 +1,7 @@
 extends Area2D
 
+class_name Bug
+
 signal killed
 
 # ====== Tamanho e hitbox ======
@@ -34,13 +36,13 @@ func setup(start_pos: Vector2, end_pos: Vector2, speed_range: Vector2, bounds: R
 
     input_pickable = true
 
-    var collision_shape := $CollisionShape2D
+    var collision_shape: CollisionShape2D = $CollisionShape2D
     if collision_shape:
         collision_shape.disabled = false
 
     _sync_hitbox_size()
 
-    var half_size := _get_visual_half_size()
+    var half_size: Vector2 = _get_visual_half_size()
     var left := _bounds.position.x
     var top := _bounds.position.y
     var right := _bounds.position.x + _bounds.size.x
@@ -72,16 +74,16 @@ func _sync_hitbox_size() -> void:
     if not collision_shape or not sprite or not sprite.texture:
         return
 
-    var texture := sprite.texture
-    var texture_size := Vector2(texture.get_size())
-    var global_scale := Vector2(abs(self.global_scale.x), abs(self.global_scale.y))
-    var half_visual := (texture_size * global_scale) * 0.5
+    var texture: Texture2D = sprite.texture
+    var texture_size: Vector2 = Vector2(texture.get_size())
+    var global_scale: Vector2 = Vector2(abs(self.global_scale.x), abs(self.global_scale.y))
+    var half_visual: Vector2 = (texture_size * global_scale) * 0.5
 
     if collision_shape.shape is CircleShape2D:
         var radius: float = max(half_visual.x, half_visual.y) * hitbox_scale
         (collision_shape.shape as CircleShape2D).radius = radius
     elif collision_shape.shape is RectangleShape2D:
-        var extents := half_visual * hitbox_scale
+        var extents: Vector2 = half_visual * hitbox_scale
         (collision_shape.shape as RectangleShape2D).extents = extents
 
     sprite.position = Vector2.ZERO
@@ -98,8 +100,8 @@ func _get_visual_half_size() -> Vector2:
 
     var sprite: Sprite2D = $Sprite2D
     if sprite and sprite.texture:
-        var texture_size := Vector2(sprite.texture.get_size())
-        var global_scale := Vector2(abs(self.global_scale.x), abs(self.global_scale.y))
+        var texture_size: Vector2 = Vector2(sprite.texture.get_size())
+        var global_scale: Vector2 = Vector2(abs(self.global_scale.x), abs(self.global_scale.y))
         return (texture_size * global_scale) * 0.5
 
     return Vector2(16, 16)

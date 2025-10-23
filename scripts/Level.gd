@@ -79,14 +79,17 @@ func _on_SpawnTimer_timeout() -> void:
     if get_tree().get_nodes_in_group("bugs").size() >= max_concurrent_bugs:
         return
 
-    var bug := _bug_scene.instantiate()
+    var bug: Bug = _bug_scene.instantiate() as Bug
+    if bug == null:
+        return
+
     bug.add_to_group("bugs")
     add_child(bug)
 
-    var bounds := _get_play_bounds()
+    var bounds: Rect2 = _get_play_bounds()
     var start_pos: Vector2
     var end_pos: Vector2
-    var edge := _rng.randi_range(0, 3 if allow_vertical_spawns else 1)
+    var edge: int = _rng.randi_range(0, 3 if allow_vertical_spawns else 1)
     var outer := 32.0
 
     match edge:
@@ -103,7 +106,7 @@ func _on_SpawnTimer_timeout() -> void:
             start_pos = Vector2(_rng.randf_range(bounds.position.x, bounds.end.x), bounds.end.y + outer)
             end_pos = Vector2(start_pos.x + _rng.randf_range(-80, 80), bounds.position.y - outer)
 
-    bug.call("setup", start_pos, end_pos, bug_speed_range, bounds)
+    bug.setup(start_pos, end_pos, bug_speed_range, bounds)
     bug.killed.connect(_on_bug_killed)
 
 func _on_bug_killed() -> void:
@@ -121,14 +124,14 @@ func _end_level(success: bool) -> void:
     _status_label.text = "✅ Sucesso!" if success else "❌ Falha!"
     emit_signal("level_finished", success)
 
-    for bug in get_tree().get_nodes_in_group("bugs"):
+    for bug: Node in get_tree().get_nodes_in_group("bugs"):
         if is_instance_valid(bug):
             bug.queue_free()
 
 func _get_play_bounds() -> Rect2:
     if _game_viewport:
-        var viewport_size := Vector2(_game_viewport.size)
-        var override_size := _game_viewport.size_2d_override
+        var viewport_size: Vector2 = Vector2(_game_viewport.size)
+        var override_size: Vector2i = _game_viewport.size_2d_override
         if override_size != Vector2i.ZERO:
             viewport_size = Vector2(override_size)
         return Rect2(Vector2.ZERO, viewport_size)
@@ -145,27 +148,27 @@ func _unhandled_input(event: InputEvent) -> void:
         _try_kill_bug_at_pointer()
 
 func _try_kill_bug_at_pointer() -> void:
-    var viewport := _game_viewport if _game_viewport else get_viewport()
+    var viewport: Viewport = _game_viewport if _game_viewport else get_viewport()
     if not viewport:
         return
 
-    var mouse_pos := viewport.get_mouse_position()
-    var canvas_transform := get_canvas_transform()
-    var world_pos := canvas_transform.affine_inverse() * mouse_pos
+    var mouse_pos: Vector2 = viewport.get_mouse_position()
+    var canvas_transform: Transform2D = get_canvas_transform()
+    var world_pos: Vector2 = canvas_transform.affine_inverse() * mouse_pos
 
-    var space_state := get_world_2d().direct_space_state
+    var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
     if not space_state:
         return
 
-    var params := PhysicsPointQueryParameters2D.new()
+    var params: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
     params.collide_with_areas = true
     params.collide_with_bodies = false
     params.position = world_pos
 
-    var hits := space_state.intersect_point(params, 8)
-    for hit in hits:
-        var collider := hit.get("collider")
-        if collider and collider.is_in_group("bugs") and collider.has_method("kill"):
+    var hits: Array[Dictionary] = space_state.intersect_point(params, 8)
+    for hit: Dictionary in hits:
+        var collider: Bug = hit.get("collider") as Bug
+        if collider and collider.is_in_group("bugs"):
             collider.kill()
             return
 
