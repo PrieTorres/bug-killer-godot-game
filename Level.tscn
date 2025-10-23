@@ -43,6 +43,7 @@ layout_mode = 2
 text = "Tempo: 30.0"
 
 [node name="ScoreLabel" type="Label" parent="Background/ScreenContainer/GameViewport/GameRoot/CanvasLayer/HBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Kills: 0/10"
 horizontal_alignment = 2

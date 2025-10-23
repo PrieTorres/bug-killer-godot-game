@@ -2,9 +2,9 @@ extends Node2D
 
 signal level_finished(success: bool)
 
-@export var duration: float = 30.0
-@export var target_kills: int = 10
-@export var spawn_interval: float = 0.8
+@export var duration: float = 15.0
+@export var target_kills: int = 20
+@export var spawn_interval: float = 0.6
 @export var bug_speed_range: Vector2 = Vector2(90, 160)
 @export var max_concurrent_bugs: int = 20
 @export var initial_delay: float = 0.5
@@ -159,3 +159,25 @@ func _on_bug_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 				print("[Level] click recebido do bug id=", bug.get_instance_id())
 				bug.call("kill")
+				
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+
+		var params := PhysicsPointQueryParameters2D.new()
+		params.position = mouse_pos
+		params.collide_with_areas = true
+		params.collide_with_bodies = false
+		params.collision_mask = 0x7FFFFFFF  # ajuste se usar layers
+
+		var space: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
+		var hits: Array[Dictionary] = space.intersect_point(params, 32)  # Godot 4: (params, max_results)
+
+		for d in hits:
+			var bug_area: Area2D = d.get("collider") as Area2D
+			if bug_area and bug_area.is_in_group("bugs"):
+				bug_area.emit_signal("killed")
+				bug_area.queue_free()
+				_on_bug_killed()
+				break
