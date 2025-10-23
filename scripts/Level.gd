@@ -18,6 +18,14 @@ signal level_finished(success: bool)
 
 @export var game_viewport_path: NodePath
 @onready var _game_viewport: SubViewport = get_node(game_viewport_path) as SubViewport
+@onready var _pew: AudioStreamPlayer2D = $SFXPew
+
+@export var win_video: VideoStream
+@export var game_over_video: VideoStream
+
+@onready var _overlay: Control = $CanvasLayer/OutcomeOverlay
+@onready var _outcome_player: VideoStreamPlayer = $CanvasLayer/OutcomeOverlay/OutcomeVideo
+@onready var _sfx_pew: AudioStreamPlayer2D = $Background/ScreenContainer/GameViewport/GameRoot/SFXPew
 
 var _bug_scene: PackedScene = preload("res://scenes/Bug.tscn")
 var _rng := RandomNumberGenerator.new()
@@ -57,12 +65,17 @@ func _reset_ui() -> void:
 	_kills = 0
 	_time_left = duration
 	_update_ui()
-	_status_label.text = ""
-	_status_label.visible = false
 
 func start_level() -> void:
 	_running = true
 	_reset_ui()
+	
+	# esconde overlay e para vídeo, se estiver visível
+	if _overlay:
+		_overlay.visible = false
+	if _outcome_player:
+		_outcome_player.stop()
+		
 	_level_timer.wait_time = duration
 	_level_timer.start()
 	_spawn_timer.wait_time = spawn_interval
@@ -85,8 +98,10 @@ func _update_ui() -> void:
 	_time_label.text = "Tempo: %.1f" % _time_left
 	_score_label.text = "Kills: %d/%d" % [_kills, target_kills]
 
-func _on_bug_killed() -> void:
+func _on_bug_killed(world_pos: Vector2) -> void:
 	_kills += 1
+	_sfx_pew.global_position = world_pos
+	_sfx_pew.play()
 	_update_ui()
 	if _kills >= target_kills:
 		_end_level(true)
@@ -95,8 +110,14 @@ func _end_level(success: bool) -> void:
 	if not _running:
 		return
 	stop_level()
-	_status_label.visible = true
-	_status_label.text = "✅ Sucesso!" if success else "❌ Falha!"
+
+	# mostra overlay com o vídeo certo
+	if _overlay and _outcome_player:
+		_overlay.visible = true
+		_overlay.mouse_filter = Control.MOUSE_FILTER_STOP  # bloqueia cliques
+		_outcome_player.stream = win_video if success else game_over_video
+		_outcome_player.play()
+
 	emit_signal("level_finished", success)
 	for b in get_tree().get_nodes_in_group("bugs"):
 		if is_instance_valid(b):
@@ -155,10 +176,11 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		print("[Level] _input no GameRoot. Viewport=", get_viewport().name, " btn=", event.button_index)
 
-func _on_bug_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int, bug: Area2D) -> void:
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-				print("[Level] click recebido do bug id=", bug.get_instance_id())
-				bug.call("kill")
+func _on_bug_input_event(vp: Viewport, event: InputEvent, _shape_idx: int, bug: Area2D) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# 1) toca o som exatamente onde clicou (coordenadas do SubViewport)
+		_pew.play()
+		bug.call("kill")
 				
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -177,7 +199,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		for d in hits:
 			var bug_area: Area2D = d.get("collider") as Area2D
 			if bug_area and bug_area.is_in_group("bugs"):
-				bug_area.emit_signal("killed")
-				bug_area.queue_free()
-				_on_bug_killed()
+				if bug_area.has_method("kill"):
+					bug_area.kill()  # deixa o Bug emitir o sinal 'killed'
+				else:
+					# fallback: toca o SFX central e destrói
+					_on_bug_killed(bug_area.global_position)
+					bug_area.queue_free()
 				break
