@@ -111,8 +111,9 @@ func _on_SpawnTimer_timeout() -> void:
 	bug.add_to_group("bugs")
 	add_child(bug)
 	
-	if not bug.is_connected("input_event", Callable(self, "_on_bug_input_event")):
-		bug.connect("input_event", Callable(self, "_on_bug_input_event"))
+        var bug_click_callable := Callable(self, "_on_bug_input_event").bind(bug)
+        if not bug.is_connected("input_event", bug_click_callable):
+                bug.connect("input_event", bug_click_callable)
 	
 	var bounds := _get_play_bounds()
 	var start_pos: Vector2
@@ -154,7 +155,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		print("[Level] _input no GameRoot. Viewport=", get_viewport().name, " btn=", event.button_index)
 
-func _on_bug_input_event(bug: Area2D, vp: Viewport, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("[Level] click recebido do bug id=", bug.get_instance_id())
-		bug.call("kill")
+func _on_bug_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int, bug: Area2D) -> void:
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+                print("[Level] click recebido do bug id=", bug.get_instance_id())
+                bug.call("kill")
