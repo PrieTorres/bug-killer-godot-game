@@ -174,7 +174,7 @@ func _try_kill_bug_at_pointer() -> void:
 
     var hits: Array[Dictionary] = space_state.intersect_point(params, 8)
     for hit: Dictionary in hits:
-        var collider := hit.get("collider")
+        var collider: Object = hit.get("collider")
         if collider is Bug:
             (collider as Bug).kill()
             return
