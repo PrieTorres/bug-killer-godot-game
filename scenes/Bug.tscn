@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://b27ybv5g75jfb"]
+
+[ext_resource type="Script" uid="uid://dtp3tj52csmal" path="res://scripts/Bug.gd" id="1_6msug"]
+[ext_resource type="Texture2D" uid="uid://m5a0n1cob5am" path="res://art/bug.png" id="2_ukddq"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ruug8"]
+radius = 75.059975
+
+[node name="Bug" type="Area2D"]
+script = ExtResource("1_6msug")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.31, 0.271)
+texture = ExtResource("2_ukddq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+process_priority = 1
+shape = SubResource("CircleShape2D_ruug8")
