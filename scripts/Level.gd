@@ -144,32 +144,39 @@ func _on_LevelTimer_timeout() -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if not _running:
         return
-    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-        _try_kill_bug_at_pointer()
+
+    if event is InputEventMouseButton:
+        var mouse_event := event as InputEventMouseButton
+        if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+            _try_kill_bug_at_pointer()
 
 func _try_kill_bug_at_pointer() -> void:
     var viewport: Viewport = _game_viewport if _game_viewport else get_viewport()
-    if not viewport:
+    if viewport == null:
         return
 
-    var mouse_pos: Vector2 = viewport.get_mouse_position()
-    var canvas_transform: Transform2D = get_canvas_transform()
-    var world_pos: Vector2 = canvas_transform.affine_inverse() * mouse_pos
+    var pointer_position: Vector2 = viewport.get_mouse_position()
+    var canvas_transform: Transform2D = viewport.get_canvas_transform()
+    var world_position: Vector2 = canvas_transform.affine_inverse() * pointer_position
 
-    var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
-    if not space_state:
+    var world: World2D = viewport.world_2d
+    if world == null:
+        return
+
+    var space_state: PhysicsDirectSpaceState2D = world.direct_space_state
+    if space_state == null:
         return
 
     var params: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
     params.collide_with_areas = true
     params.collide_with_bodies = false
-    params.position = world_pos
+    params.position = world_position
 
     var hits: Array[Dictionary] = space_state.intersect_point(params, 8)
     for hit: Dictionary in hits:
-        var collider: Bug = hit.get("collider") as Bug
-        if collider and collider.is_in_group("bugs"):
-            collider.kill()
+        var collider := hit.get("collider")
+        if collider is Bug:
+            (collider as Bug).kill()
             return
 
 func _status_label_hide() -> void:
