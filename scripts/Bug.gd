@@ -1,6 +1,6 @@
 extends Area2D
 
-signal killed(world_pos: Vector2)
+signal killed
 
 # ====== Tamanho e hitbox ======
 @export var base_scale: float = 0.35          # deixe menor aqui
@@ -9,7 +9,6 @@ signal killed(world_pos: Vector2)
 
 # ====== Orientação da arte ======
 @export var sprite_forward_angle: float = +PI / 2.0  # sua arte aponta PRA CIMA → -PI/2
-@onready var pewAudio: AudioStreamPlayer2D = $pew
 
 # ====== Movimento e vida ======
 var _speed: float = 120.0
@@ -124,5 +123,6 @@ func _get_visual_half_size() -> Vector2:
 func kill() -> void:
 	if _dead:
 		return
-	_dead = true	
+	_dead = true
+	emit_signal("killed")
 	queue_free()
