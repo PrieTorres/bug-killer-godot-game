@@ -19,13 +19,13 @@ signal level_finished(success: bool)
 @export var game_viewport_path: NodePath
 @onready var _game_viewport: SubViewport = get_node(game_viewport_path) as SubViewport
 @onready var _pew: AudioStreamPlayer2D = $SFXPew
-@onready var _sfx_pew: AudioStreamPlayer2D = $Background/ScreenContainer/GameViewport/GameRoot/SFXPew
+
+@export var win_video: VideoStream
+@export var game_over_video: VideoStream
 
 @onready var _overlay: Control = $CanvasLayer/OutcomeOverlay
-
-@export var win_image: Texture2D
-@export var game_over_image: Texture2D
-@onready var _outcome_sprite: TextureRect = $CanvasLayer/OutcomeOverlay/OutcomeVideo
+@onready var _outcome_player: VideoStreamPlayer = $CanvasLayer/OutcomeOverlay/OutcomeVideo
+@onready var _sfx_pew: AudioStreamPlayer2D = $Background/ScreenContainer/GameViewport/GameRoot/SFXPew
 
 var _bug_scene: PackedScene = preload("res://scenes/Bug.tscn")
 var _rng := RandomNumberGenerator.new()
@@ -70,11 +70,11 @@ func start_level() -> void:
 	_running = true
 	_reset_ui()
 	
+	# esconde overlay e para vídeo, se estiver visível
 	if _overlay:
 		_overlay.visible = false
-		_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if _outcome_sprite:
-		_outcome_sprite.texture = null
+	if _outcome_player:
+		_outcome_player.stop()
 		
 	_level_timer.wait_time = duration
 	_level_timer.start()
@@ -111,10 +111,12 @@ func _end_level(success: bool) -> void:
 		return
 	stop_level()
 
-	if _overlay and _outcome_sprite:
+	# mostra overlay com o vídeo certo
+	if _overlay and _outcome_player:
 		_overlay.visible = true
-		_overlay.mouse_filter = Control.MOUSE_FILTER_STOP  # bloqueia cliques abaixo
-		_outcome_sprite.texture = win_image if success else game_over_image
+		_overlay.mouse_filter = Control.MOUSE_FILTER_STOP  # bloqueia cliques
+		_outcome_player.stream = win_video if success else game_over_video
+		_outcome_player.play()
 
 	emit_signal("level_finished", success)
 	for b in get_tree().get_nodes_in_group("bugs"):

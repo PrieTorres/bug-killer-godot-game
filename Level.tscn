@@ -1,9 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://cadbt47k3fq7f"]
+[gd_scene load_steps=4 format=3 uid="uid://cadbt47k3fq7f"]
 
 [ext_resource type="Texture2D" uid="uid://dmg0c7yxup1pi" path="res://art/pc_background.png" id="1_bexhn"]
 [ext_resource type="Script" uid="uid://cst7ony8m4d2u" path="res://scripts/Level.gd" id="1_t7iv1"]
-[ext_resource type="Texture2D" uid="uid://dqpabft3gj86i" path="res://art/win_gif-ezgif.com-gif-to-sprite-converter.png" id="3_q4iis"]
-[ext_resource type="Texture2D" uid="uid://3gjw2y4ahi0h" path="res://art/game-over-game-ezgif.com-gif-to-sprite-converter.png" id="4_m3clv"]
 [ext_resource type="AudioStream" uid="uid://b5uh8j4dsj2no" path="res://audio/pew.mp3" id="4_wkftn"]
 
 [node name="Level" type="Node2D"]
@@ -33,8 +31,6 @@ render_target_update_mode = 4
 [node name="GameRoot" type="Node2D" parent="Background/ScreenContainer/GameViewport"]
 script = ExtResource("1_t7iv1")
 game_viewport_path = NodePath("..")
-win_image = ExtResource("3_q4iis")
-game_over_image = ExtResource("4_m3clv")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="Background/ScreenContainer/GameViewport/GameRoot"]
 
@@ -65,12 +61,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TextureRect" type="TextureRect" parent="Background/ScreenContainer/GameViewport/GameRoot/CanvasLayer/OutcomeOverlay"]
+[node name="OutcomeVideo" type="VideoStreamPlayer" parent="Background/ScreenContainer/GameViewport/GameRoot/CanvasLayer/OutcomeOverlay"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
-expand_mode = 2
-stretch_mode = 5
+expand = true
 
 [node name="SpawnTimer" type="Timer" parent="Background/ScreenContainer/GameViewport/GameRoot"]
 autostart = true
