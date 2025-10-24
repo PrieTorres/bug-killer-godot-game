@@ -122,7 +122,12 @@ func _get_visual_half_size() -> Vector2:
 	
 
 func kill() -> void:
-	if _dead:
-		return
-	_dead = true	
-	queue_free()
+        if _dead:
+                return
+        _dead = true
+        self.input_pickable = false
+        var cs: CollisionShape2D = $CollisionShape2D
+        if cs:
+                cs.disabled = true
+        emit_signal("killed", global_position)
+        queue_free()

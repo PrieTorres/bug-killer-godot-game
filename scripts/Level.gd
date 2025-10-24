@@ -18,14 +18,13 @@ signal level_finished(success: bool)
 
 @export var game_viewport_path: NodePath
 @onready var _game_viewport: SubViewport = get_node(game_viewport_path) as SubViewport
-@onready var _pew: AudioStreamPlayer2D = $SFXPew
 
 @export var win_video: VideoStream
 @export var game_over_video: VideoStream
 
 @onready var _overlay: Control = $CanvasLayer/OutcomeOverlay
 @onready var _outcome_player: VideoStreamPlayer = $CanvasLayer/OutcomeOverlay/OutcomeVideo
-@onready var _sfx_pew: AudioStreamPlayer2D = $Background/ScreenContainer/GameViewport/GameRoot/SFXPew
+@onready var _sfx_pew: AudioStreamPlayer2D = $SFXPew
 
 var _bug_scene: PackedScene = preload("res://scenes/Bug.tscn")
 var _rng := RandomNumberGenerator.new()
@@ -100,8 +99,10 @@ func _update_ui() -> void:
 
 func _on_bug_killed(world_pos: Vector2) -> void:
 	_kills += 1
-	_sfx_pew.global_position = world_pos
-	_sfx_pew.play()
+	if _sfx_pew:
+		_sfx_pew.global_position = world_pos
+		_sfx_pew.stop()
+		_sfx_pew.play()
 	_update_ui()
 	if _kills >= target_kills:
 		_end_level(true)
@@ -178,8 +179,6 @@ func _input(event: InputEvent) -> void:
 
 func _on_bug_input_event(vp: Viewport, event: InputEvent, _shape_idx: int, bug: Area2D) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		# 1) toca o som exatamente onde clicou (coordenadas do SubViewport)
-		_pew.play()
 		bug.call("kill")
 				
 
